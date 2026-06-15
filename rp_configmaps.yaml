@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reverse-proxy-config
+data:
+  nginx.conf: |
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        upstream gateway_backend {
+            server api-gateway-svc:10000;
+        }
+
+        server {
+            listen 80;
+
+            ssi on;
+            ssi_silent_errors off;
+
+            location = /combined {
+                alias /var/www/templates/combined.tmpl;
+                default_type text/html;
+            }
+
+            location /internal-num {
+                internal;
+                proxy_pass http://gateway_backend/number;
+                proxy_set_header Host api-gateway-svc;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+
+            location /internal-str {
+                internal;
+                proxy_pass http://gateway_backend/string;
+                proxy_set_header Host api-gateway-svc;
+                proxy_set_header X-Real-IP $remote_addr;
+            }
+        }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reverse-proxy-template
+data:
+  combined.tmpl: |
+    Number_String = <!--# include virtual="/internal-num" -->_<!--# include virtual="/internal-str" -->
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reverse-proxy-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reverse-proxy
+
+  template:
+    metadata:
+      labels:
+        app: reverse-proxy
+
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+
+        ports:
+        - containerPort: 80
+
+        volumeMounts:
+        - name: config-vol
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+
+        - name: template-vol
+          mountPath: /var/www/templates/combined.tmpl
+          subPath: combined.tmpl
+
+      volumes:
+      - name: config-vol
+        configMap:
+          name: reverse-proxy-config
+
+      - name: template-vol
+        configMap:
+          name: reverse-proxy-template
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reverse-proxy-svc
+spec:
+  type: LoadBalancer
+
+  selector:
+    app: reverse-proxy
+
+  ports:
+  - port: 80
+    targetPort: 80

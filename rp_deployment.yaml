@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reverse-proxy-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reverse-proxy
+  template:
+    metadata:
+      labels:
+        app: reverse-proxy
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config-vol
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+        - name: template-vol
+          mountPath: /var/www/templates/combined.tmpl
+          subPath: combined.tmpl
+      volumes:
+      - name: config-vol
+        configMap:
+          name: reverse-proxy-config
+      - name: template-vol
+        configMap:
+          name: reverse-proxy-template
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reverse-proxy-svc
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: reverse-proxy

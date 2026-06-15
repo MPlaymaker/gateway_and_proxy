@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microservices-code
+data:
+  # Python code for NumberService (Random Number)
+  numberservice.py: |
+    import random
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(str(random.randint(1000, 9999)).encode())
+    HTTPServer(('0.0.0.0', 5001), Handler).serve_forever()
+
+  # Python code for StringService (Random String)
+  stringservice.py: |
+    import random
+    import string
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            rand_str = ''.join(random.choices(string.ascii_lowercase, k=5))
+            self.wfile.write(rand_str.encode())
+    HTTPServer(('0.0.0.0', 5002), Handler).serve_forever()
+---
+# DEPLOYMENT: NumberService (Random Number)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: numberservice-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: numberservice
+  template:
+    metadata:
+      labels:
+        app: numberservice
+    spec:
+      containers:
+      - name: python-app
+        image: python:3.10-alpine
+        command: ["python3", "/app/numberservice.py"]
+        ports:
+        - containerPort: 5001
+        volumeMounts:
+        - name: code-volume
+          mountPath: /app
+      volumes:
+      - name: code-volume
+        configMap:
+          name: microservices-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: numberservice-svc
+spec:
+  ports:
+  - port: 5001
+    targetPort: 5001
+  selector:
+    app: numberservice
+---
+# DEPLOYMENT: StringService (Random String)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stringservice-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stringservice
+  template:
+    metadata:
+      labels:
+        app: stringservice
+    spec:
+      containers:
+      - name: python-app
+        image: python:3.10-alpine
+        command: ["python3", "/app/stringservice.py"]
+        ports:
+        - containerPort: 5002
+        volumeMounts:
+        - name: code-volume
+          mountPath: /app
+      volumes:
+      - name: code-volume
+        configMap:
+          name: microservices-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stringservice-svc
+spec:
+  ports:
+  - port: 5002
+    targetPort: 5002
+  selector:
+    app: stringservice
