@@ -21,7 +21,7 @@ which neatly assembled them and dropped them into your terminal window.
 2. Create **apps.yaml** - This describes the NumberService, StringService and their deployment configuration
 3. Create **gateway.yaml** - This describes the API gateway pod configuration (service and deployment)
 	We use Envoy as API gateway here
-4. Create r**p_configmaps.yaml** - This defines the config maps for ReverseProxy (service, SSI - Server Side Includes, configuration)
+4. Create **rp_configmaps.yaml** - This defines the config maps for ReverseProxy (service, SSI - Server Side Includes, configuration)
 	We use NGINX as reverse Proxy here
 5. Create **rp_deployment.yaml** - This defines the Reverse proxy deployment
 
