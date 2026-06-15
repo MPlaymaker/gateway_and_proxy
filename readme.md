@@ -27,13 +27,13 @@ which neatly assembled them and dropped them into your terminal window.
 
 In Terminal run following command
 
-kubectl apply -f apps.yaml
-kubectl apply -f gateway.yaml
-kubectl apply -f rp_configmaps.yaml
-kubectl apply -f rp_deployment.yaml
-kubectl rollout restart deployment/numberservice-deployment
-kubectl rollout restart deployment/stringservice-deployment
-kubectl rollout restart deployment/api-gateway-deployment
-kubectl rollout restart deployment/reverse-proxy-deployment
+kubectl apply -f apps.yaml \
+kubectl apply -f gateway.yaml \
+kubectl apply -f rp_configmaps.yaml \
+kubectl apply -f rp_deployment.yaml \
+kubectl rollout restart deployment/numberservice-deployment \
+kubectl rollout restart deployment/stringservice-deployment \
+kubectl rollout restart deployment/api-gateway-deployment \
+kubectl rollout restart deployment/reverse-proxy-deployment \
 
 
