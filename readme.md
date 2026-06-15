@@ -34,6 +34,6 @@ kubectl apply -f rp_deployment.yaml \
 kubectl rollout restart deployment/numberservice-deployment \
 kubectl rollout restart deployment/stringservice-deployment \
 kubectl rollout restart deployment/api-gateway-deployment \
-kubectl rollout restart deployment/reverse-proxy-deployment \
+kubectl rollout restart deployment/reverse-proxy-deployment
 
 
